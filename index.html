@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On "Leave One Out" Shrinkage</title>
+<meta name="description" content="Whitepaper by Ian Atroshchenko on mean centering in Leave One Out shrinkage covariance estimation for EMIT.">
+<style>
+  :root { --bg:#f5f5f4; --fg:#1c1917; --muted:#57534e; --card:#ffffff; --border:#d6d3d1; --accent:#1d4ed8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1c1917; --fg:#f5f5f4; --muted:#a8a29e; --card:#292524; --border:#44403c; --accent:#93c5fd; } }
+  :root[data-theme="dark"] { --bg:#1c1917; --fg:#f5f5f4; --muted:#a8a29e; --card:#292524; --border:#44403c; --accent:#93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { max-width: 900px; margin: 0 auto; padding: 24px 16px 8px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .meta { color: var(--muted); font-size: .95rem; margin: 0 0 12px; }
+  .actions a { color: var(--accent); text-decoration: none; font-weight: 600; margin-right: 16px; }
+  .actions a:hover { text-decoration: underline; }
+  main { max-width: 900px; margin: 0 auto; padding: 8px 16px 48px; }
+  .page { display:block; width:100%; height:auto; background:#fff; border:1px solid var(--border); border-radius:6px; margin: 0 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  #status { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>On "Leave One Out" Shrinkage</h1>
+  <p class="meta">Ian Atroshchenko · July 17, 2026 · 3 pages</p>
+  <p class="actions"><a href="whitepaper.pdf" download>Download PDF</a><a href="whitepaper.pdf" target="_blank" rel="noopener">Open in browser</a></p>
+</header>
+<main>
+  <p id="status">Loading document…</p>
+  <div id="pages"></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+<script type="module">
+  import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+  const status = document.getElementById("status");
+  const container = document.getElementById("pages");
+  try {
+    const pdf = await pdfjsLib.getDocument("whitepaper.pdf").promise;
+    const dpr = window.devicePixelRatio || 1;
+    const targetWidth = Math.min(container.clientWidth, 900);
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const base = page.getViewport({ scale: 1 });
+      const scale = targetWidth / base.width;
+      const viewport = page.getViewport({ scale: scale * dpr });
+      const canvas = document.createElement("canvas");
+      canvas.className = "page";
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.setAttribute("aria-label", `Page ${i} of ${pdf.numPages}`);
+      container.appendChild(canvas);
+      await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+    }
+    status.remove();
+  } catch (e) {
+    status.textContent = "The inline viewer could not load. Use the links above to download or open the PDF.";
+    console.error(e);
+  }
+</script>
+</body>
+</html>
